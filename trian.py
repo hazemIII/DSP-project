@@ -1,24 +1,25 @@
-__author__ = 'hazem'
-import scipy
-import numpy
+import wave
+import winsound
+import os
 from scipy.io.wavfile import read,write
 from numpy.fft import fft , ifft
-import os , wave
-from operator import itemgetter
-test_set=[]
-numb=[]
-path = []
+import numpy
+import scipy.io as sio
+import time
+startTime = time.time()
+path=[]
 for i in range (0,10):
     path.append("D:\\ELC4a\\DSP project\\speech_data\\"+str(i))
+train_set=[]
+test_set=[]
+numb=[]
 for k in range(0,10):
     dirs = os.listdir( path[k] )
-    for i in range(20,30):
+    for i in range(0,20):
         rate,data=read(path[k]+"/"+dirs[i])
         numb.append(data)
-    test_set.append(numb)
+    train_set.append(numb)
     numb=[]
-knowledge=scipy.io.loadmat('knowledge.mat')
-
 def feature(wave):
     l=len(wave)
     Fwave= fft(wave)/l
@@ -56,21 +57,15 @@ def feature(wave):
     for i in n:
         feature_list.append(numpy.log(numpy.sum(numpy.power(i,2))))
     return feature_list
-def classifier(F,K):
-    s = []
-    for i in range(0,10):
-        s.append(numpy.sum(abs((F - K[i]))))
-    index = min(enumerate(s), key=itemgetter(1))
-    return index[0]
-counter = 0
-f_test=[]
-c_f=numpy.zeros([10,10])
-for i in range(0,10):
-    for n in range(0,10):
-        f = feature(test_set[i][n])
-        c= classifier(f,knowledge["knowledge"])
-        c_f[i][c]=c_f[i][c]+1
-        if i == c :
-            counter=counter+1
-print(counter)
-print(c_f)
+knowledge=[]
+temp=[]
+sum=numpy.zeros(7)
+sum1=0
+for i in train_set:
+    for k in i:
+        sum=sum+numpy.asarray(feature(k))
+    sum=sum/20
+    knowledge.append(sum)
+    sum=numpy.zeros(7)
+sio.savemat("knowledge",{"knowledge":knowledge})
+elapsedTime = time.time() - startTime
